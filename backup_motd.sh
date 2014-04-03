@@ -6,20 +6,11 @@
 ## This script needs some configuration files to know what, how and where     ##
 ## Backups are done.                                                          ##
 ## TO AVOID RIGHT ISSUES ON FILES TO BACKUP THIS SCRIPT MUST BE RUN AS ROOT.  ##
+## This version of script is to use only is rsync server have a mot du jour   ##
+## configured.                                                                ##
 ################################################################################
 
 source ./backup.conf
-
-
-if [[ $debug -eq 1 ]] ; then 
-	set -nx
-fi
-
-usage() {
-	
-	
-}
-
 fatal_error(){
 	logger -p local1.err -t backup -- $@
 	exit 1
@@ -47,10 +38,12 @@ create_host_dir() {
 }
 
 pre_backup() {
+	rsync --list-only --password-file ${rsyncsecretfile} ${rsyncuser}@${rsyncserver}::${rsyncmodule}/${host}
+	host_dir_exist=$?
 	if [[ first_time_backup -eq 1 ]] ; then 
 		create_host_dir
 		sed -i 's/first_time_backup=1/first_time_backup=0'
-	elif [[ -z $(rsync --list-only --password-file ${rsyncsecretfile} ${rsyncuser}@${rsyncserver}::${rsyncmodule}/${host}) ]] ; then
+	elif [[ ${host_dir_exist} -ne 0 ]] ; then
 		create_host_dir
 	fi
 	unset host_dir_exist
@@ -59,10 +52,7 @@ pre_backup() {
 
 backup_rotate() {
 	# First we verify if there is a backup to rotate
-	if [[ -n $(rsync --list-only --password-file ${rsyncsecretfile} ${rsyncuser}@${rsyncserver}::${rsyncmodule}/${dir2remove}/) ]] ; then
-		rsync -avPHXAW --password-file ${rsyncsecretfile} ${rsyncuser}@${rsyncserver}::${rsyncmodule}/${dir2remove}/ ${rsyncuser}@${rsyncserver}::${rsyncmodule}/${backup_dir}/
-		if [[ $? -eq 0 ]] ; then
-			rsync -aW --remove-source-files --password-file ${rsyncsecretfile} ${rsyncuser}@${rsyncserver}::${rsyncmodule}/${dir2remove}
+	rsync --list-only --password-file ${rsyncsecretfile} ${rsyncuser}@${rsyncserver}::${rsyncmodule}/${dir2remove}/
 }
 
 backup() {

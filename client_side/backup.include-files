@@ -5,8 +5,8 @@
 ## /path/to/directory/to/backup/                                              ##
 ##     * file backup :                                                        ##
 ## /path/to/file/to/backup                                                    ##
+## For databases (only mysql at this time) files backup add path to config    ##
+## files in main configuration file.                                          ##
 ################################################################################
 
-/etc/
-/var/lib/mysql/		
-/home/marc/toto
+
